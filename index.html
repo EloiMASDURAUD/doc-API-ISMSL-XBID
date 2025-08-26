@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentacion API XBID</title>
+    <link rel="stylesheet" href="style/style.css">
+    <script src="https://kit.fontawesome.com/68b99e8b24.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div id="navBar">
+        <a href="index.html">Documentacion API</a>
+        <a href="login.html">Login API</a>
+        <a href="apiEndpoints.html">Endpoints API</a>
+        <a href="javaDoc/index.html" target="_blank" rel="noopener noreferrer">JavaDoc</a>
+        <a href="#"
+            onclick="window.open('ressources/OMIEDoc.pdf', 'OMIEDoc', 'width=800,height=600'); return false;">DocumentacionOMIE</a>
+    </div>
+    <div id="doc">
+        <h1>
+            DOCUMENTACIÓN PARA LA API XBID DE ISMSL
+        </h1>
+        <h2>
+            ÍNDICE
+        </h2>
+        <div class="list">
+            <p>- <a href="#introduccion">INTRODUCCIÓN</a></p>
+            <p>- <a href="#estrucutra">ESTRUCTURA</a></p>
+            <p>- <a href="#detalle">DETALLE DE FUNCIONAMIENTO</a></p>
+            <p>- <a href="#logs">LOGS</a></p>
+        </div>
+        <h2 id="introduccion">
+            INTRODUCCIÓN
+        </h2>
+        <div class="intro">
+            <p>
+                Esta API automatiza las operaciones en el mercado continuo y guarda los datos en mongoDB.
+                La API está desarrollada en JavaSE-1.8 y se base en la versión proporcionada por OMIE.
+                Esta documentación trata principalmente de lo que se ha añadido a la API de OMIE, para más informaciones
+                ver <a href="#"
+                    onclick="window.open('ressources/OMIEDoc.pdf#page=0', 'OMIEDoc', 'width=800,height=600'); return false;">
+                    la documentación de OMIE </a>.
+            </p>
+            <div class="imgContainer">
+                <div class="imgScrollContainer"><img class="bigPicture" src="svg/globalStructure.svg"></div>
+            </div>
+        </div>
+        <h2 id="estrucutra">
+            ESTRUCTURA
+        </h2>
+        <div class="intro">
+            <p>Organización general de las diferentes clases en el proyecto, para más detalle sobre el código ver la <a
+                    href="javaDoc/index.html" target="_blank" rel="noopener noreferrer">javaDoc</a>.</p>
+        </div>
+        <div class="content">
+            <p>
+                Lo que sigue es un diagrama de bloques del proyecto entero. Explica de manera resumida el funcionamiento
+                de
+                la API. No están descritas todas las clases y solo está escrito un resumen para cada clase.
+            </p>
+            <div class="imgContainer">
+                <div class="imgScrollContainer"><img src="./svg/ClasesGlobal.svg" class="bigPicture">
+                </div>
+            </div>
+        </div>
+        <h2 id="detalle">
+            DETALLE DE FUNCIONAMIENTO
+        </h2>
+        <div class="intro">
+            <p>En esta parte se tratan con más detalles de partes específicas del proyecto.</p>
+        </div>
+        <div class="content">
+            <h3>Comunicación API > Cliente</h3>
+            <div class="intro">
+                <p>Como se crea el servidor http para interactuar con la API.</p>
+            </div>
+            <div class="content">
+                <p>El servidor http utiliza NanoHttp porque el proyecto utiliza una version de spring (antigua) y el
+                    proyecto tiene conflictos entre varios .jar.
+                    Entonces, utilizar Spring o Spring Boot para el servidor http significaría resolver estos
+                    conflictos, lo cual sería lo mismo que empezar el proyecto desde cero.
+                </p>
+                <p>El controller del servidor esta la clase <a
+                        href="./javaDoc/com/nano/nanoController/EmbeddedHttpServer.html">EmbeddedHttpServer</a>. Esta
+                    clase es la main clase del proyecto. Tiene dos campos, <a
+                        href="javaDoc/com/nano/service/NanoService.html">NanoService</a>,
+                    el servicio del servidor y routes que contiene las informaciones de las rutas del servidor. routes
+                    esta un listado de objetos <a
+                        href="./javaDoc/com/nano/nanoController/NanoRoute.html">NanoRoutes</a>. Cada instancia de <a
+                        href="./javaDoc/com/nano/nanoController/NanoRoute.html">NanoRoutes</a> contiene un regex que
+                    reconoce la uri de un endpoint
+                    y un map que vincula cada método http con un método del servicio para un uri.
+                    Al arranque del servidor, <a
+                        href="./javaDoc/com/nano/nanoController/RoutesFactory.html">RoutesFactory</a> para llenar routes
+                    con todas las rutas.
+                    Cuando llega una petición al servidor, mira en el listado de rutas si una corresponde al uri/método
+                    http y llama el <a href="./javaDoc/com/nano/service/NanoService.html"> servicio</a> con el método
+                    guardado en la ruta si una corresponde.
+                </p>
+            </div>
+            <h3>Inicialización de XBIDMngr</h3>
+            <div class="intro">
+                <p>XBIDMngr gestionna todos los datos y las comunicaciones de XBID.</p>
+            </div>
+            <div class="content">
+                <div class="codeSnippet">
+                    <p>
+                        public static void startXBIDSession() {<br><br>
+                    <div class="content">
+                        String zone = "10YES-REE------0";<br>
+                        HostInfo hostData = HostConfig.test();<br>
+                        new Login(Certs.FG, hostData.getHostname(), "/jsiom/app/servicesTrading/login/",
+                        hostData.getAppId(), zone);<br>
+                        UIController controller = Login.controller;<br>
+                        gatewayTimeHandler = new GatewayTimeHandler(controller);<br>
+                        xbidInfo = new XbidInfo(gatewayTimeHandler, mongoClient, zone);<br>
+                        orderMngr = new OrderMngr(xbidInfo, gatewayTimeHandler);<br>
+                        XbidInfoAmqpUpdater.addXbidInfo(xbidInfo, orderMngr);<br>
+                    </div>
+                    }
+                    </p>
+                </div>
+                <p>Este codigo inicializa la connección con el servidor XBID y las clases que gestionan los datos del
+                    servidor.</p>
+                <div class="codeSnippet">
+                    <p>String zone = "10YES-REE------0";</p>
+                </div>
+                <p>zone es el código de <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=13', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        zona geográfica</a> del agente (españa, portugal etc).
+                </p>
+                <div class="codeSnippet">
+                    <p>HostInfo hostData = HostConfig.test();</p>
+                </div>
+                <p>HostConfig guarda perfiles de <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=9', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        appID </a> y url para conectarse a diferentes entornos (producción o test).
+                </p>
+                <div class="codeSnippet">
+                    <p>new Login(Certs.FG, hostData.getHostname(), "/jsiom/app/servicesTrading/login/",
+                        hostData.getAppId(), zone);</p>
+                </div>
+                <p>Login inicia la conexión con el servidor y inicializa el contexto spring para interactuar con el
+                    servidor. El funcionamiento de Login no esta descrito por ser ya hecho al empezo de este proyecto.
+                </p>
+                <div class="codeSnippet">
+                    <p>UIController controller = Login.controller</p>
+                </div>
+                <p>Coge el controller del Login para el envío de peticiones.</p>
+                <div class="codeSnippet">
+                    <p>gatewayTimeHandler = new GatewayTimeHandler(controller);</p>
+                </div>
+                <p>gatewayTimeHandler envuelve el controller y assegura que los tiempos de espera estan respectados.</p>
+                <div class="codeSnippet">
+                    <p>
+                        xbidInfo = new XbidInfo(gatewayTimeHandler, mongoClient, zone);<br>
+                        orderMngr = new OrderMngr(xbidInfo, gatewayTimeHandler);
+                    </p>
+                </div>
+                <p>Inicia xbidInfo y orderMngr para tratar los datos del mercado y verificar peticiones.</p>
+                <div class="codeSnippet">
+                    <p>XbidInfoAmqpUpdater.addXbidInfo(xbidInfo, orderMngr);</p>
+                </div>
+                <p>Da las instancias de xbidInfo y orderMngr a XbidInfoAmqpUpdater, asi les puede distribuir los
+                    mensajes de la cola.</p>
+            </div>
+            <h3>Envio de ofertas</h3>
+            <div class="intro">
+                <p>Detalle del proceso de envío de nuevas ofertas con una petición del cliente.</p>
+            </div>
+            <div class="content">
+                <div class="imgContainer">
+                    <div class="imgScrollContainer"><img src="./svg/NewOrders.svg" class="bigPicture">
+                    </div>
+                </div>
+                <p>
+                    Cuando se envían ofertas por la API, se envían al servidor XBID con el clientOrderID siguiente :
+                    clientID-basketID-nºoferta
+                    con clientID el ID del cliente que envia en su peticion, basketID un hexaCode generado por la API
+                    para todas las ofertas de la peticion y
+                    nºoferta el numero de la oferta en el basket. El clientID no puede superar 80 carácter.
+                </p>
+            </div>
+            <h3>Actualización de datos</h3>
+            <div class="intro">
+                <p>Como se actualizan los datos de la API con los mensajes que llegan en la cola AMQP.</p>
+            </div>
+            <div class="content">
+                Hay quatro tipos de mensajes que tratar :
+                <div class="list">
+                    <p>- PublicContract informaciones publicas sobre un contrato (cuarto de hora).</p>
+                    <p>- TradeUpdate transacciones de todos los agentes del mercado.</p>
+                    <p>- PrivateOrder informaciones de ofertas del agente.</p>
+                    <p>- ErrorResponse mensaje de error en respuesta a mensajes mal construidos.</p>
+                </div>
+                <p>
+                    En la cola, se consuman los mensajes uno a uno en un thread unico. Entonces si el tratamiento de un
+                    mensaje tarda demasiado puede encargar la cola AMQP.
+                </p>
+                <p>
+                    Con PublicContract se actualiza <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                    Se añaden a los datos las nuevas ofertas (o modificaciones de ofertas ya existando) y se actualiza
+                    el estado de los contratos. Antes de modificar los datos, se verifican los números de versión. Si el
+                    mensaje
+                    es de una versión demasiado antigua, no hay actualización. Si el mensaje esta demasiado reciente
+                    (falta a la API uno o más mensajes de actualización), la API envia Inquiries al servidor
+                    para reiniciar sus datos.
+                </p>
+                <p>
+                    Con TradeUpdate se actualiza <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                    Se añaden las nuevas transacciones. Se verifica la versión del mensaje igual que para los
+                    PublicContract.
+                    Además si una oferta implica el agente, se añade al <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=25', 'OMIEDoc', 'width=800,height=600'); return false;">tradeList</a>.
+                    En este caso, se actualiza también la posicion y el limite operativo
+                    (se añade el importe de la transacción por el impuesto de IVA si esta negativo).
+                    Finalmente se quita el clientOrderID del <a
+                        href="./javaDoc/ismsl/manager/orders/OrdersCache.html">OrdersCache</a> significando que los
+                    datos del servidor estan en un estado que permite envio de ofertas.
+                </p>
+                <p>
+                    Con PrivateOrder se actualiza <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        OrderList</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                    Las ofertas se actualizan de la misma manera que para un mensaje PublicContract. Ademas se actualiza
+                    el limite operativo (se añade el importe x IVA de la oferta si esta una nueva oferta o se quita la
+                    diferencia de importe x IVA si esta una modificación) y se quita el orderID del <a
+                        href="./javaDoc/ismsl/manager/orders/OrdersCache.html">OrdersCache</a> significando que los
+                    datos del servidor estan en un estado que permite envio de ofertas.<br>
+                    En el caso que el estado de la oferta esta PEXE o FEXE (parcialmente ejecutado o "fully" ejecutado)
+                    se añade los ID al <a href="./javaDoc/ismsl/manager/orders/OrdersCache.html">OrdersCache</a> porque
+                    hasta que llegue el mensaje de transacción, el limite operativo esta erroneado.
+                    Finalmente se actualiza el <a
+                        href="./javaDoc/com/nano/api/ClientBasketStatus.html">ClientBasketStatus</a>.
+                </p>
+                <p>
+                    ErrorResponse usualmente llega en la cola cuando se envian ofertas mal construidas al servidor, significando en la mayoría de los casos que los datos de la API estan 
+                    desincronizado con el servidor. Algunos mensajes de errores vienen con la valor a cambiar (por ejemplo, en caso de enviar una oferta con demasiado importe para el limite operativo, llega en la cola el error 519
+                    y la valor del limite operativo, asi se puede arreglar los datos) en los otros casos, la API envia Inquiries para volver a sincronizarse
+                </p>
+            </div>
+        </div>
+        <h2 id="logs">
+            LOGS
+        </h2>
+        <div class="intro">
+            <p>Descripción de los diferentes log de la API.</p>
+        </div>
+        <div class="content">
+            <h3>clientRequests</h3>
+            <div class="intro">
+                <p>Este log da las peticiones de clientes para la API y las respuestas de la API.</p>
+            </div>
+            <div class="content">
+                <h4>Petición</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">-> Incoming request {requestID} : {requestMethod} {uri}</p>
+                    <p>requestID es un ID creado por la API al recibir de la petición para identificar la respuesta de
+                        una petición en los logs.</p>
+                    <p>requestMethod es el método http de la petición.</p>
+                    <p>uri es la uri de la petición.</p>
+                </div>
+                <h4>Respuesta</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no"><- OutGoing response {requestID} : {responseStatus}</p>
+                            <p>requestID es un ID creado por la API al recibir de la petición para identificar la
+                                respuesta de una petición en los logs.</p>
+                            <p>responseStatus es el status de la respuesta.</p>
+                </div>
+            </div>
+            <h3>dataUpdates</h3>
+            <div class="intro">
+                <p>Este log da los mensajes de actualización de datos en la cola AMQP.</p>
+            </div>
+            <div class="content">
+                <h4>Nuevo mensaje</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">+ {tipoMensaje} received {mensajeDesc} in amqp queue content : {mensajeContent}
+                    </p>
+                    <p>tipoMensaje puede ser PublicContract para informaciones públicas del mercado, TradeUpdate para
+                        una transacción del agente o ServerNotification para una notificación del servidor.</p>
+                    <p>mensajeDesc es una corta Descripción del tipo de mensaje.</p>
+                    <p>mensajeContent el contenido del mensaje.</p>
+                </div>
+                <h4>Actualización de datos</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">O {tipoMensaje} updating API data with incoming data</p>
+                    <p>tipoMensaje puede ser PublicContract para informaciones públicas del mercado, TradeUpdate para
+                        una transacción del agente o ServerNotification para una notificación del servidor.</p>
+                </div>
+                <h4>Error no grave</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">o {tipoMensaje} incoming data is outdated, API data unchanged. API
+                        orderBookRevisionNo :
+                        {numAPI}, incoming orderBookRevisionNo : {numInc}</p>
+                    <p>tipoMensaje puede ser PublicContract para informaciones públicas del mercado, TradeUpdate para
+                        una transacción del agente o ServerNotification para una notificación del servidor.</p>
+                    <p>numAPI es el número de versión de los datos de la API para el mensaje de la cola.</p>
+                    <p>numInc es el número de versión de los datos del mensaje de la cola. En este caso, numInc < numAPI
+                            significando que el mensaje contiene datos demasiado antiguos y así no se actualizan los
+                            datos de la API.</p>
+                </div>
+                <h4>Error grave</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">X {tipoMensaje} API data is outdated, refreshing API data by requesting the
+                        server. API
+                        orderBookRevisionNo : {numAPI}, incoming orderBookRevisionNo : {numInc}</p>
+                    <p>tipoMensaje puede ser PublicContract para informaciones públicas del mercado, TradeUpdate para
+                        una transacción del agente o ServerNotification para una notificación del servidor.</p>
+                    <p>numAPI es el número de versión de los datos de la API para el mensaje de la cola.</p>
+                    <p>
+                        numInc es el número de versión de los datos del mensaje de la cola. En este caso, numInc >
+                        numAPI + 1
+                        significando que el mensaje contiene datos demasiado recientes y así le faltan datos a la API.
+                        La
+                        API se actualizará llamando al servidor directamente.
+                    </p>
+                    <p>
+                        Al arranque de la API llegará el log "X API data wasn't initialized, refreshing" significando
+                        que la API va a llamar el servidor para iniciar la base de datos de la API.
+                    </p>
+                </div>
+            </div>
+            <h3>Querries</h3>
+            <div class="intro">
+                <p>Este log da todas las peticiones que la API envía al servidor.</p>
+            </div>
+            <div class="content">
+                <h4>Inquiry</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">I sending Inquiry {tipoInquiry} content : {content}</p>
+                    <p>tipoInquiry es el tipo de de datos pedido al servidor.</p>
+                    <p>content es el contenido de la petición.</p>
+                </div>
+                <h4>Management</h4>
+                <div class="content">
+                    <p>Formato de la entrada : </p>
+                    <p translate="no">M sending Management {tipoInquiry} content : {content}</p>
+                    <p>tipoInquiry es el tipo de de datos enviado al servidor.</p>
+                    <p>content es el contenido de la petición.</p>
+                </div>
+            </div>
+            <h3>Orders</h3>
+            <div class="intro">
+                <p>Este log describe las operaciones de la API sobre ofertas.</p>
+                <div class="content">
+                    <h4>Nueva operación</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">--- {action} ---</p>
+                        <p>action es la operación que la API va a realizar (inserción de ofertas, cancelación etc).</p>
+                    </div>
+                    <h4>Error al envio</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">--- ERROR ON {action} ORDERS {desc} ---</p>
+                        <p>action es la operación que la API intentaba realizar (inserción de ofertas, cancelación etc).
+                        </p>
+                        <p>desc es la descripción del error, puede tomar varias formas. Siguen las más comunes :</p>
+                        <div class="list">
+                            <p>"server is closed for trading" cuando el servidor no acepta operaciones en el mercado.
+                            </p>
+                            <p>"illegal basket size" cuando la petición contiene demasiadas ofertas.</p>
+                            <p>"basket with ID: basketID Not found" cuando el ID de basket comunicado no existe.</p>
+                        </div>
+                    </div>
+                    <h4>Petición</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">| sending {action} querry : {querry}</p>
+                        <p>action es la operación que la API va a realizar (inserción de ofertas, cancelación etc).</p>
+                        <p>
+                            querry es la petición del cliente verificada por la API, contiene las ofertas válidas que se
+                            enviarán al servidor y las ofertas que no se pueden enviar.
+                            También es la respuesta para el cliente.
+                        </p>
+                    </div>
+                    <h4>Fin envio</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">--- {action} done {nbOfertas} order {action}s requested ---</p>
+                        <p>action es la operación que la API ha realizado (inserción de ofertas, cancelación etc).</p>
+                        <p>nbOfertas es el número de ofertas en la petición enviada al servidor.</p>
+                    </div>
+                    <h4>oferta en la cola</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">+ order in amqp queue BasketID : {basketID}, {order}</p>
+                        <p>basketID es el ID de basket de la oferta.</p>
+                        <p>order es la oferta puesta en el servidor que acaba de llegar en la cola.</p>
+                    </div>
+                    <h4>oferta en la cola</h4>
+                    <div class="content">
+                        <p>Formato de la entrada : </p>
+                        <p translate="no">! error in amqp queue for basketID : {basketID}, {error}</p>
+                        <p>basketID es el ID de basket del error.</p>
+                        <p>error es el mensaje de error que ha llegado en la cola.</p>
+                        <p>si el error en la cola no puede vincularse a un basket, el log tendrá esta forma :</p>
+                        <p translate="no">! error in amqp queue : {error}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+</body>
+<script>
+    window.addEventListener("load", () => {
+        Array.from(document.getElementsByClassName("bigPicture")).forEach(el => {
+            const naturalWidth = el.naturalWidth;
+            el.style.width = `${naturalWidth}px`;
+        });
+    });
+</script>
+
+</html>

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+
+<body>
+    <h1>
+        DOCUMENTACIÓN PARA MARKETVIEWER
+    </h1>
+    <h2>
+        ÍNDICE
+    </h2>
+    <div class="list">
+        <p>- <a href="#introduccion">INTRODUCCIÓN</a></p>
+        <p>- <a href="#estrucutra">ESTRUCTURA</a></p>
+        <p>- <a href="#instrucciones">INSTRUCCIONES</a></p>
+    </div>
+    <h2 id="INTRODUCCIÓN">
+        INTRODUCCIÓN
+    </h2>
+    <div class="intro">
+        <p>Este proyecto permite dos cosas:</p>
+        <div class="list">
+            <p>- Ver la posición y el beneficio para cada UP.</p>
+            <p>- Ver el beneficio de cada Sujeto del Mercado durante un periodo de tiempo.</p>
+        </div>
+    </div>
+    <div class="content">
+        Hay dos scripts en este proyecto. El primero, <a href="#mercadoVistaDia">mercadoVistaDia.py</a>, da la posición
+        y el beneficio de cada UP para un día. El otro,
+        <a href="#beneficioVistaMes">beneficioVistaMes.py</a>, muestra solo el beneficio de cada Sujeto del Mercado
+        durante un periodo a elegir. Los resultados se entregan en un archivo Excel en
+        <a href="#excelSalida">excelSalida</a>.
+        Los datos se calculan en <a href="#Tools">Tools</a>\<a href="#getMarketView">getMarketView.py</a>.
+        Para calcular el beneficio, es necesario estimar el mercado para cada p48. Esta estimación se realiza con <a
+            href="#Tools">Tools</a>\<a href="#getNombreBase">getNombreBase.py</a>. Sin embargo, esta estimación puede
+        ser incorrecta.
+        Para asegurar el correcto funcionamiento de los scripts, se recomienda ejecutar el script <a
+            href="#verifyNombreBase">verifyNombreBase.py</a> y seguir las <a href="#instrucciones">instrucciones</a>
+        para verificar o corregir la estimación.
+    </div>
+    <h2 id="ESTRUCTURA">
+        ESTRUCTURA
+    </h2>
+    <div class="intro">
+        <p>Organización de los archivos en el proyecto</p>
+    </div>
+    <div class="content">
+        <h3 id="excelEntrada">excelEntrada</h3>
+        <div class="intro">
+            <p>En esta carpeta se colocan los archivos Excel utilizados para corregir la estimación del mercado para
+                cada p48.</p>
+        </div>
+        <h3 id="excelSalida">excelSalida</h3>
+        <div class="intro">
+            <p>En esta carpeta se guardan los datos calculados con los scripts.</p>
+        </div>
+        <h3 id="Tools">Tools</h3>
+        <div class="content">
+            <h4 id="getMarketView">getMarketView.py</h4>
+            <div class="intro">
+                <p>Función que realiza la mayor parte del cálculo de los datos.</p>
+            </div>
+            <div class="content">
+                <p>Este script toma como entrada una fecha en formato YYYY-MM-DD y regresa cuatro dataframes.</p>
+                <div class="list">
+                    <div class="item">
+                        <p>- lastPosDp: la última posición de cada UP.</p><img>
+                    </div>
+                    <div class="item">
+                        <p>- lastPosSujetoDp: la última posición de cada Sujeto del Mercado.</p><img>
+                    </div>
+                    <div class="item">
+                        <p>- beneficioTotalDp: el beneficio de cada UP.</p><img>
+                    </div>
+                    <div class="item">
+                        <p>- beneficioSujetoDp: el beneficio de cada Sujeto del Mercado.</p><img>
+                    </div>
+                </div>
+                <p>Este script puede tardar bastante tiempo en ejecutarse (de 2 a 3 minutos hasta 15 minutos) debido a
+                    la cantidad de datos.</p>
+            </div>
+            <h4 id="getNombreBase">getNombreBase.py</h4>
+            <div class="intro">
+                <p>Función que realiza la estimación del mercado para cada p48.</p>
+            </div>
+            <div class="content">
+                <p>
+                    Como entrada, toma una fecha en formato YYYY-MM-DD y regresa un dataframe con columnas de mercado
+                    con los valores ('MD', 'MI1', 'MI2', 'MI3', 'ID1-ID2', 'ID2-ID3', 'ID3-FIN')
+                    y nombre_base con valores p48_YYYYMMDDHH, es decir, los p48 para el día elegido.
+                    Si existe un archivo Excel correspondiente al día en <a href="#excelSalida">excelSalida</a>, utiliza
+                    los datos de ese archivo. Si no, los obtiene de MongoDB (ver <a
+                        href="#instrucciones">instrucciones</a>).
+                </p>
+            </div>
+            <h4 id="prettyExcel">prettyExcel.py</h4>
+            <div class="intro">
+                <p>Librería utilizada para dar formato a los archivos Excel.</p>
+            </div>
+            <h4 id="utilities">Utilities.py</h4>
+            <div class="intro">
+                <p>Librería utilizada para conectar con MongoDB.</p>
+            </div>
+        </div>
+        <h4 id="beneficioVistaMes">beneficioVistaMes</h4>
+        <div class="intro">
+            <p>Obtiene el beneficio de cada Sujeto del Mercado entre las dos fechas elegidas.</p>
+        </div>
+        <div class="content">
+            <p>
+                Se recomienda verificar la estimación del mercado para cada día dentro del intervalo elegido (ver <a
+                    href="#instrucciones">instrucciones</a>). El
+                script toma alrededor de 2 horas y 30 minutos para un intervalo de un mes.
+            </p>
+        </div>
+        <h4 id="mercadoVistaDia">mercadoVistaDia</h4>
+        <div class="intro">
+            <p>Obtiene la posición y el beneficio de cada UP para un día.</p>
+        </div>
+        <div class="content">
+            <p>
+                Se recomienda verificar la estimación del mercado para la fecha elegida (ver <a
+                    href="#instrucciones">instrucciones</a>).
+                El script puede tardar entre 2 a 15 minutos en ejecutarse.
+            </p>
+        </div>
+        <h4 id="verifyNombreBase">verifyNombreBase</h4>
+        <div class="intro">
+            <p>Este script se utiliza solo para verificar la estimación del mercado para cada p48.</p>
+        </div>
+    </div>
+    <h2 id="instrucciones">INSTRUCCIONES</h2>
+    <div class="intro">
+        <p>Instrucciones para utilizar el proyecto.</p>
+    </div>
+    <div class="content">
+        <p>
+            Hay dos archivos que generan datos: <a href="#beneficioVistaMes">beneficioVistaMes.py</a> y 
+            <a href="#beneficioVistaDia">beneficioVistaDia.py</a>.
+            Para ambos, solo se debe ingresar la o las fechas en los archivos y ejecutar. Sin embargo, los archivos p48
+            utilizados para el cálculo en estos scripts no proporcionan el mercado de compra/venta
+            de cada UP. Entonces, el mercado de cada transacción se estima de la siguiente manera: el primer p48 es el
+            MD, el segundo es el MI1, el octavo es el MI2 y el vigésimo primero el MI3.
+        </p>
+        <p>
+            Esta estimación funciona la mayoría de las veces, sin embargo, es posible que el MI2 no esté en el octavo
+            p48 o que otro mercado no se encuentre en su posición habitual. Por lo tanto, el archivo
+            <a href="#verifyNombreBase">verifyNombreBase.py</a> se utiliza para verificar esta estimación. Genera para
+            la fecha elegida la posición de ISMSC01 para cada p48 y asigna el mercado estimado a cada p48.
+            Si la posición real de ISMSC01 para un mercado es diferente de lo estimado, se puede rectificar la
+            estimación.
+        </p>
+        <p>
+            Para rectificar la estimación: en el archivo Excel generado por <a href="#verifyNombreBase">verifyNombreBase.py</a>, cambie la columna de mercado para corregirla.
+            Luego, copie las columnas nombre_base y mercado con el nombre en un nuevo archivo Excel y guárdelo en <a
+                href="#excelEntrada">excelEntrada</a> con el nombre YYYY-MM-DD.xlsx, donde YYYY-MM-DD es la fecha de
+            estimación.
+        </p>
+    </div>
+</body>
+
+</html>

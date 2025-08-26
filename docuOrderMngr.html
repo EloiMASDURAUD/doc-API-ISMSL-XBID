@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doc OrderMngr</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+<body>
+    <h1>DOCUMENTACION OrderMngr</h1>
+    <h2 id="ordersParams">OrdersParams :</h2>
+    <div class="intro">
+        <p>
+            OrdersParams es una clase que define parametros de ordenes.
+            tiene 5 parametros
+        </p>        
+        <div class="list">
+            <p>- orderPosicion</p>
+            <p>- delta</p>
+            <p>- executionCondition</p>
+            <p>- step</p>
+            <p>- ppd</p>
+        </div>
+    </div>
+    <div class="content">
+        <p>
+            orderPosicon es de tipo <a href="#posicionEnergia">PosicionEnergia</a>, define la posicion de las up en la que los ordenes deben resultar.
+        </p>
+        <p>
+            delta es el delta de precio applicado al precio maximo (o minimo) de compra (o venta). 
+            delta se anade a un orden de venta y se quita a un orden de compra.
+            (delta positivo = orden que no casa ahora, delta negativo = orden que casa ahora).
+        </p>
+        <p>
+            executionCondition ver documentacion OMIE.
+        </p>
+        <p>
+            step debe ser null para ordenes simple, sino es la cantidad de un tramo de iceberg.
+	        step debe ser mayor de 5 y orderPosicion hecho de manera que posicionUp - orderPosicion > step sino no se envia 
+    	    ordenes (para este contracto).
+        </p>
+        <p>
+            ppd es la variacion de precio cada tramo de un iceberg. Para venta, ppd = -ppd.abs(); para compra, ppd = ppd.abs().
+        	Entonces no hace falta el signo de ppd. 
+        </p>
+        <h3>EJEMPLO :</h3>
+        <div class="content">
+            <p>
+                para un contracto, si la up esta a -10MWH y orderPosicon a -22MWH, step a 5 y ppd a 2. 
+                Si llamamos minPrc el precio minimo de venta para este contracto, el orden resultara en :
+            </p>
+            <div class="list">
+                <p>
+                    - un orden iceberg de compra con un primero tramo de 5MWH a minPrc,
+                </p>
+                <p>
+                    - un secundo tramo de 5MWH a minPrc a minPrc-2,
+                </p>
+                <p>
+                    - un ultimo tramo de 2MWH a minPrc a minPrc-4.
+                </p>
+            </div>
+        </div>
+    </div>
+    <h2 id="posicionEnergia">PosicionEnergia</h2>
+    <div class="intro">
+        <p>
+            Esta clase representa una posicion para los contractos abiertos en MWH de nuestras up. se utiliza en <a href="#ordersParams">OrdersParams</a> para el calculo de ordenes.
+        </p>
+    </div>
+    <div class="content">
+        <h3>EJEMPLO :</h3>
+        <div class="content">
+            <p>Un objeto <a href="#posicionEnergia">PosicionEnergia</a> se crea con este metodo : </p>
+            <p class="codeSnippet">xbidInfo.newPosicion(ISMSC01, ISMRE02, ISMRE03);</p>
+            <p>Donde ISMSC01, ISMRE02, ISMRE03 son double, la posicion de cada up para cada contracto (no sepuede hacer una posicion distincta cada contracto ahora)</p>
+            <p>Para poner todas las up a zero, hay que dar este <a href="#posicionEnergia">PosicionEnergia</a> a <a href="#ordersParams">OrdersParams</a> : </p>
+            <p class="codeSnippet">xbidInfo.newPosicion(0., 0., 0.); //los . son porque los parametros deben ser double</p>
+            <p>Para comprar 10MWH cada contracto solo para ISMSC01, hay que dar este <a href="#posicionEnergia">PosicionEnergia</a> a <a href="#ordersParams">OrdersParams</a> : </p>
+            <p class="codeSnippet">xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(0.1, -0.1, -0.1));</p>
+        </div>
+    </div>
+    <h2 id="addOrders">OrderMngr.addOrders</h2>
+    <div class="intro">
+        <p>Este metodo guarda ordenes en un set para despues enviar los al servidor como NewOrders con el metodo <a href="#sendNewOrders">sendNewOrders</a></p>
+    </div>
+    <div class="content">
+        <p>El unico parametro esta un objeto <a href="#ordersParams">OrdersParams</a> crea un orden simple o iceberg (depiende de los parametros) para cada contracto y up en la orderPosicion de los parametros si el orden esta valido para este contracto/up</p>
+        <p>Los ordenes estan anadido en el set newClientOrders de OrderMngr y se quitan dependiente a lo que llega en la cola</p>
+        <h3>EJEMPLO : </h3>
+        <div class="content">
+            <p>Ordenes simple para poner todas las up a 0MWH con un orden para cada up/contracto al precio maxCompra/minCompra : </p>
+            <div class="codeSnippet">
+                <p>PosicionEnergia posicion = xbidInfo.newPosicion(0., 0., 0.);</p>
+                <p>OrdersParams params = new OrdersParams();</p>
+                <p>params.setOrderPosicion(posicion);</p>
+                <p>orderMngr.addOrders(params);</p>
+            </div>
+            <p>Ordenes para comprar 10MWH con ISMSC01 cada contracto a minVenta - 5</p>
+            <div class="codeSnippet">
+                <p>PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(10., 0., 0.));</p>
+                <p>OrdersParams params = new OrdersParams();</p>
+                <p>params.setOrderPosicion(posicion);</p>
+                <p>params.setDelta(5.);</p>
+                <p>orderMngr.addOrders(params);</p>
+            </div>
+            <p>Ordenes para comprar 12MWH con ISMSC01 cada contracto a minVenta con un iceberg de tramos de 5MWH y un ppd a 2</p>
+            <div class="codeSnippet">
+                <p>PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(12., 0., 0.));</p>
+                <p>OrdersParams params = new OrdersParams();</p>
+                <p>params.setOrderPosicion(posicion);</p>
+                <p>params.setPpd(2);</p>
+                <p>params.setStep(5)</p>
+                <p>orderMngr.addOrders(params);</p>
+            </div>
+        </div>
+    </div>
+    <h2 id="sendNewOrders">OrderMngr.sendNewOrders</h2>
+    <div class="intro">
+        <p>Este metodo envia los nuevos ordenes en el set newClientOrders con el management NewOrders.</p>
+    </div>
+    <div class="content">
+        <p>El metodo sendNewOrders(String complexCondition, int basketSize, boolean sendAll) tiene 3 parametros : </p>
+        <div class="list">
+            <p>- complexCondition es la condicion compleja de losbaskets, ver la documentacion de OMIE.</p>
+            <p>- basketSize esta el tamano de los baskets enviados, si esta mayor de 100 los baskets todavia seran de 100 ordenes.</p>
+            <p>- sendAll, si true se envia todos los ordenes en el set newClientOrders sino se envia solo el primero basket.</p>
+        </div>
+        <p>Si los ordenes que se han enviado vuelven como valido en la cola, se quitan del set newClientOrders sino se quedan en el set para reintentar enviar los.</p>
+    </div>
+    <h2 id="cancelClientsOrders">OrderMngr.cancelClientOrders</h2>
+    <div class="intro">
+        <p>Este metodo pone todos los ordenes activo del cliente en el set cancelClientOrders para despues cancelarlos con el metodo <a href="#sendCancelOrders">sendCancelOrders</a>.</p>
+        <p>No necesita parametros y solo se puede poner todos los ordenes en el set por ahora.</p>
+    </div>
+    <div class="content">
+        <p>Si en el codigo se envian ordenes antes de usar <a href="#cancelClientsOrders">cancelClientsOrders</a> para cancelar estos ordenes que acaban de ser enviado, esta recomandado poner un tiempo de espera asi que los ordenes nuevos llegan a la cola y que se actualiza los datos del API. Sino esta probable que solamente se anaderon algunos o ningunos ordenes al set cancelClientOrders.</p>
+        <h3>EJEMPLO : </h3>
+        <div class="content">
+            <p>mala practica</p>
+            <div class="codeSnippet">
+                <p>orderMngr.addOrders(params);</p>
+                <p>orderMngr.sendNewOrders("None", 100, true);</p>
+                <p>orderMngr.cancelClientOrders();</p>
+            </div>
+            <p>buena practica</p>
+            <div class="codeSnippet">
+                <p>orderMngr.addOrders(params);</p>
+                <p>orderMngr.sendNewOrders("None", 100, true);</p>
+                <p>Thread.sleep(3000);</p>
+                <p>orderMngr.cancelClientOrders();</p>
+            </div>
+        </div>
+    </div>
+    <h2 id="sendCancelOrders">OrderMngr.sendCancelOrders</h2>
+    <div class="intro">
+        <p>Este metodo envia los ordenes en cancelClientOrders para cancelar con el Management CancelOrers.</p>
+        <p>como <a href="#sendNewOrders">sendNewOrders</a> se puede elegir el tamano de basket enviado y si se envia solo un basket</p>
+        <p>Si un orden llega en la cola como no mas valido, se quita del set cancelClientOrders.</p>
+    </div>
+    <h2 id="updateAllClientOrders">OrderMngr.updateAllClientOrders</h2>
+    <div class="intro">
+        <p>Este metodo modifica todos los ordenes del cliente con los parametros.</p>
+    </div>
+    <div class="content">
+        <p>Similario a <a href="#addOrders">addOrders</a> tiene como unico parametro un objeto <a href="#ordersParams">OrdersParams</a>.</p>
+        <p>Itera sobre cada orden en el orderlist y guarda ordenes modificado en el set modifyClientOrders. Solo modifica la posicion y el precio del orden acordado con el parametro.</p>
+        <p>No se puede cambiar el typo de orden, solo la cantidad y el precio (ppd y tQty tambien para icebergs).</p>
+    </div>
+    <h2 id="sendModifyOrders">OrderMngr.sendModifyOrders</h2>
+    <div class="intro">
+        <p>No tiene parametro, envia los ordenes modificado en el set modifyClientOrders al servidor con el management ModifyOrders uno a uno.</p>
+        <p> Si la modificacion esta valida o que el orden no existe mas (casado o cancelado), se quita el orden del set.</p>
+    </div>
+    <h2 id="ejemplos">EJEMPLOS DE CODIGO PARA LA PRUEBA</h2>
+    <div class="intro">
+        <p>Esos son codigos que se pueden copiar para las differentes pruebas.</p>
+    </div>
+    <div class="content">
+
+        <h4>Oferta de compra simple que no case :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up un orden de compra de 0.1 MWH con un delta de 300, asi no case el orden.
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(0.1, 0.1, 0.1));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(300.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta de compra simple que case completamente :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up un orden de compra de 0.1 MWH con un delta de 0, asi case el orden completamente.
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(0.1, 0.1, 0.1));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta de compra simple que case parcialmente :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up el orden de compra mas grande possible con un delta de 0, asi esta probable que case el orden parcialmente (porque hay mucha cantidad).
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getLimitsPotencia().getPosicionMin();<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+        <h4>Oferta de venta simple que no case :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up un orden de venta de 0.1 MWH con un delta de 300, asi no case el orden.
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(-0.1, -0.1, -0.1));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(300.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta de venta simple que case completamente :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up un orden de venta de 0.1 MWH con un delta de 0, asi case el orden completamente.
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(-0.1, -0.1, -0.1));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta de venta simple que case parcialmente :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto/up el orden de venta mas grande possible con un delta de 0, asi esta probable que case el orden parcialmente (porque hay mucha cantidad).
+                Los ordenes se envian uno a uno.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getLimitsPotencia().getPosicionMax();<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+        <h4>Modificación de una oferta simple :</h4>
+
+        <div class="content">
+            <p>
+                Envia para cada contracto un orden simple para poner ISMSC01 a 10MWH con un delta de 200 (asi no case).
+                Despues los modifica para poner ISMSC01 a 20MWH con un delta de 0.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-10., 0., 0.);<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 100, true);<br>
+                    Thread.sleep(3000);<br>
+                    posicion = xbidInfo.newPosicion(-20., 0., 0.);<br>
+                    params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(0.);<br>
+                    orderMngr.updateAllClientOrders(params);<br>
+                    orderMngr.sendModifyOrders();<br>
+                </p>
+            </div>
+        </div>
+
+
+        <h4>Cancelación de una oferta simple :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas que no casen y las cancela despues.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-10., 0., 0.);<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                    Thread.sleep(3000);<br>
+                    orderMngr.cancelClientOrders();<br>
+                    orderMngr.sendCancelOrders(1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders/sendCancelOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+        <h4>Oferta Iceberg de compra sin delta de precio (PPD) :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas Iceberg de compra de total cantidad 10Mwh, step 5MWH para cada up/Contrato.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(5.);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta Iceberg de compra con delta de precio (PPD) :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas Iceberg de compra de total cantidad 10Mwh, step 5MWH y ppd 2€/MWH para cada up/Contrato.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(5.);<br>
+                    params.setPpd(2);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+
+        <h4>Oferta Iceberg de venta sin delta de precio (PPD) :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas Iceberg de venta de total cantidad 10Mwh, step 5MWH para cada up/Contrato.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(-10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(5.);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+        <h4>Oferta Iceberg de venta con delta de precio (PPD) :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas Iceberg de venta de total cantidad 10Mwh, step 5MWH y ppd 2€/MWH para cada up/Contrato.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(-10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(5.);<br>
+                    params.setPpd(2);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders/sendCancelOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+
+        <h4>Modificación de una oferta Iceberg :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas Iceberg de compra de total cantidad 10Mwh, step 5MWH con un delta de 100 para cada up/Contrato.
+                Despues lo cambia para una cantidad total de 12 y delta de 5.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(200.);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                    posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(12., 0., 0.));<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(5.);<br>
+                    orderMngr.updateAllClientOrders(params);<br>
+                    orderMngr.sendModifyOrders();<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+
+        <h4>Cancelación de una oferta Iceberg :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas iceberg que no casen y las cancela despues.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.getPosicion().subtract(xbidInfo.newPosicion(10., 0., 0.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setStep(new BigDecimal(5));<br>
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 1, true);<br>
+                    Thread.sleep(3000);<br>
+                    orderMngr.cancelClientOrders();<br>
+                    orderMngr.sendCancelOrders(1, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders/sendCancelOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+
+        <h4>Basket de al menos 10 ofertas sin condición compleja :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas en baskets para poner ISMSC01 a -15MWH y ISMRE02 e ISMRE03 a 2MWH.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-15., 2., 2.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 10, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo 10 ordenes en total.</p>
+        </div>
+
+
+
+        <h4>Basket de al menos 10 ofertas con el indicativo LINKED :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas en baskets LINKED para poner ISMSC01 a -15MWH y ISMRE02 e ISMRE03 a 2MWH.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-15., 2., 2.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setComplexCondition("FOK")
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("LINKED", 10, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo 10 ordenes en total.</p>
+        </div>
+
+
+
+
+        <h4>Basket de al menos 10 ofertas con el indicativo VALID :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas en baskets VALID para poner ISMSC01 a -15MWH y ISMRE02 e ISMRE03 a 2MWH.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-15., 2., 2.));<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setComplexCondition()
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("VALID", 10, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders si quieres enviar solo 10 ordenes en total.</p>
+        </div>
+
+
+
+
+
+        <h4>Envío de cancelaciones en una Basket :</h4>
+
+        <div class="content">
+            <p>
+                Envia ofertas que no casen y las cancela despues.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    PosicionEnergia posicion = xbidInfo.newPosicion(-10., 0., 0.);<br>
+                    OrdersParams params = new OrdersParams();<br>
+                    params.setOrderPosicion(posicion);<br>
+                    params.setDelta(200.);<br>
+                    orderMngr.addOrders(params);<br>
+                    orderMngr.sendNewOrders("None", 10, true);<br>
+                    Thread.sleep(3000);<br>
+                    orderMngr.cancelClientOrders();<br>
+                    orderMngr.sendCancelOrders(10, true);<br>
+                </p>
+            </div>
+            <p>Poner false en sendNewOrders/sendCancelOrders si quieres enviar solo un orden en total.</p>
+        </div>
+
+
+
+
+    </div>
+</body>
+</html>
+
+

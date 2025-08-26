@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login para la API XBID</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+
+<body>
+    <div id="navBar">
+        <a href="index.html">Documentacion API</a>
+        <a href="login.html">Login API</a>
+        <a href="apiEndpoints.html">Endpoints API</a>
+        <a href="javaDoc/index.html" target="_blank" rel="noopener noreferrer">JavaDoc</a>
+        <a href="#"
+            onclick="window.open('ressources/OMIEDoc.pdf', 'OMIEDoc', 'width=800,height=600'); return false;">DocumentacionOMIE</a>
+    </div>
+    <div id="doc">
+        <h1>
+            LOGIN Y PROCESOS DE SEGURIDAD PARA LA API XBID DE ISMSL
+        </h1>
+        <h2 id="introduccion">
+            INTRODUCCIÓN
+        </h2>
+        <div class="intro">
+            <p>
+                La API utiliza un token unico para habilitar las comunicaciones. Los usuarios estan
+                guardados en TERA.OMIE.users_xbid. Un usuario tiene un login y una contraseña que utiliza
+                para pedir un token de conneccion. Despues, puede utilizar el token y su login para llamar
+                a todos los endpoints en <a href="apiEndpoints.html">Endpoints API</a>.
+            </p>
+        </div>
+        <h2>
+            Creacion de session
+        </h2>
+        <div class="intro">
+            <p>
+                Para iniciar una session, el usuario tiene que proporcionar sus credenciales (login y contrasena)
+                a la uri /login. Si las credenciales estan correctas, la API contesta "Login successfull". En la
+                cabecera
+                de esta respuesta se encuentra el campo "authorization" que contiene el token de connección.
+            </p>
+        </div>
+        <div class="content">
+            <p>
+                Peticion de conneccion para el usuario test con la contrasena 123:
+            <div class="codeSnippet">
+                <p>
+                    POST /login : {<br>
+                <div class="list">
+                    <p>
+                        headers : {
+                    <div class="list">
+                        <p>
+                            "user" : "test",<br>
+                            "Content-Type": "application/json"
+                        </p>
+                    </div>
+                    }, <br>
+                    body : {
+                    <div class="list">
+                        "password" : 123
+                    </div>
+                    }
+                    </p>
+                </div>
+                }
+                </p>
+            </div>
+            </p>
+            <p>
+                Respuesta de la API:
+            <div class="codeSnippet">
+                <p>
+                    headers: {<br>
+                <div class="list">
+                    <p>
+                        "authorization": "0f9308e9-0a9b-42e2-9be1-df1f0288f6f9"
+                    </p>
+                </div>
+                },
+                body: {<br>
+                <div class="list">
+                    <p>Login Successfull</p>
+                </div>
+                }
+                </p>
+            </div>
+            </p>
+        </div>
+        <h2>
+            Utilizacion del token
+        </h2>
+        <div class="intro">
+            Despues de hacer el login, el usuario tiene que proporcionar el token y su login para cada peticion.
+            Despues de cada peticion valida, la API contesta con la nueva valor del token.
+            Entonces despues de cada peticion se cambia el token y el cliente tiene que hacer su proxima peticion
+            con el token que le contesto la API.
+
+            <div class="codeSnippet">
+                <p>
+                    REQUEST : {<br>
+                <div class="list">
+                    <p>
+                        headers : {
+                    <div class="list">
+                        <p>
+                            "user" : "test",<br>
+                            "authorization": "0f9308e9-0a9b-42e2-9be1-df1f0288f6f9"
+                        </p>
+                    </div>
+                    }<br>
+                    ...
+                    </p>
+                </div>
+                }
+                </p>
+            </div>
+            <br>
+            <div class="codeSnippet">
+                <p>
+                    RESPONSE : {<br>
+                <div class="list">
+                    <p>
+                        headers : {
+                    <div class="list">
+                        <p>
+                            "user" : "test",<br>
+                            "authorization": "a3f1c7b2-4d29-45a7-8c6e-9d5f4b32e1a7"
+                        </p>
+                    </div>
+                    }
+                    </p>
+                    ...
+                </div>
+                }
+            </div>
+        </div>
+        <h2>
+            Cambiar contrasena
+        </h2>
+        <div class="intro">
+            <p>
+                El cambio de contrasena se puede hacer despues de coger el token de conneccion.
+                El usuario hace una peticion a la uri /change-password con la nueva contrasena en el body.
+            </p>
+            <div class="codeSnippet">
+                <p>
+                    POST /change-password : {<br>
+                <div class="list">
+                    <p>
+                        headers : {
+                    <div class="list">
+                        <p>
+                            "user" : "test",<br>
+                            "authorization": "a3f1c7b2-4d29-45a7-8c6e-9d5f4b32e1a7"
+                            "Content-Type": "application/json"
+                        </p>
+                    </div>
+                    }, <br>
+                    body : {
+                    <div class="list">
+                        "password" : 456
+                    </div>
+                    }
+                    </p>
+                </div>
+                }
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

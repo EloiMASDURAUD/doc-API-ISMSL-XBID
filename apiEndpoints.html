@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doc API Endpoints</title>
+    <link rel="stylesheet" href="style/style.css">
+</head>
+
+<body>
+    <div id="navBar">
+        <a href="index.html">Documentacion API</a>
+        <a href="login.html">Login API</a>
+        <a href="apiEndpoints.html">Endpoints API</a>
+        <a href="javaDoc/index.html" target="_blank" rel="noopener noreferrer">JavaDoc</a>
+        <a href="#"
+            onclick="window.open('ressources/OMIEDoc.pdf', 'OMIEDoc', 'width=800,height=600'); return false;">DocumentacionOMIE</a>
+    </div>
+    <div id="doc">
+        <h1>DOCUMENTACION DE LOS ENDPOINTS DE LA API PARA XBID</h1>
+        <h2 id="introduccion">INTRODUCCIÓN</h2>
+        <div class="intro">
+            <p>
+                La meta de esta API es permitir la comunicación con XBID de manera automática. La API se encarga de
+                mantener actualizados los datos del mercado.
+                También se encarga de verificar las peticiones antes del envío a los servidores de XBID.
+                Los intercambios con el cliente se hacen, por la mayor parte, con la estructura descrita en la
+                <a href="ressources/OMIEDoc.pdf"> documentación de OMIE</a>.
+            </p>
+        </div>
+        <div class="content">
+            <p>
+                Sigue, un listado de todos los endpoints disponibles en la API.
+            </p>
+            <div class="list">
+                <p>- <a href="#getInfo" translate="no">GET /</a></p>
+                <p>- <a href="#getMarketInfo" translate="no">GET /market-info</a></p>
+                <p>- <a href="#getOrderlist" translate="no">GET /order-list</a></p>
+                <p>- <a href="#getTradelist" translate="no">GET /trade-list</a></p>
+                <p>- <a href="#getPosicion" translate="no">GET /posicion</a></p>
+                <p>- <a href="#getOpLimit" translate="no">GET /limite-operativo</a></p>
+                <p>- <a href="#getPotenciaLimit" translate="no">GET /limite-potencia</a></p>
+                <p>- <a href="#getIDHora" translate="no">GET /id-hora</a></p>
+                <p>- <a href="#getBestPrices" translate="no">GET /best-prices</a></p>
+                <p>- <a href="#shutdown" translate="no">POST /shutdown</a></p>
+                <p>- <a href="#startUp" translate="no">POST /start-up</a></p>
+                <p>- <a href="#refresh" translate="no">POST /refresh</a></p>
+                <p>- <a href="#postOrders" translate="no">POST /orders</a></p>
+                <p>- <a href="#postCancel" translate="no">POST /orders/cancel</a></p>
+                <p>- <a href="#postCancelContract" translate="no">POST /orders/cancel-contract</a></p>
+                <p>- <a href="#postCancelAll" translate="no">POST /orders/cancel-all</a></p>
+                <p>- <a href="#postCancelAllClient" translate="no">POST /orders/cancel-all/{clientID}</a></p>
+                <p>- <a href="#postModify" translate="no">POST /orders/modify</a></p>
+                <p>- <a href="#postActivateAll" translate="no">POST /orders/activate-all</a></p>
+                <p>- <a href="#getBasket" translate="no">GET /orders/{basketID}</a></p>
+                <p>- <a href="#getBasketsClient" translate="no">GET /user/{clientID}</a></p>
+                <p>- <a href="#postCancelBasket" translate="no">POST /orders/{basketID}/cancel</a></p>
+            </div>
+        </div>
+        <h2 id="endpoints">ENPOINTS</h2>
+        <div class="content">
+            <h3 id="getInfo" translate="no">GET /</h3>
+            <div class="content">
+                <p>Devuelve los informaciones de connección de la API: el certificado uitilizado, el appID y la url del servidor.</p>
+            </div>
+            <h3 id="getMarketInfo" translate="no">GET /marketinfo</h3>
+            <div class="content">
+                <p>Devuelve todos los datos públicos del mercado contrato a contrato. <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        Ver la documentación de OMIE
+                    </a>.</p>
+            </div>
+            <h3 id="getOrderlist" translate="no">GET /orderlist</h3>
+            <div class="content">
+                <p>Devuelve todas las ofertas del cliente que sean activas, canceladas o casadas. <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=24', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        Ver la documentación de OMIE
+                    </a>.</p>
+            </div>
+            <h3 id="getTradelist" translate="no">GET /tradelist</h3>
+            <div class="content">
+                <p>Devuelve todas las transacciones del cliente. <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=25', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        Ver la documentación de OMIE
+                    </a>.</p>
+            </div>
+            <h3 id="getPosicion" translate="no">GET /posicion</h3>
+            <div class="content">
+                <p>Devuelve la posición de las up del agente, solo las up que tienen una predicción en mongoDB.</p>
+                <div class="vSplit">
+                    <div class="codeSnippet">
+                        <p>{</p>
+                        <div class="list">
+                            <p>MyUnits1 : [</p>
+                            <div class="list">
+                                <p>contractID : posicion</p>
+                                <p>contractID : posicion</p>
+                                <p>contractID : posicion</p>
+                                <p>contractID : posicion</p>
+                                <p>contractID : posicion</p>
+                                <p>contractID : posicion</p>
+                                <p>...</p>
+                            </div>
+                            <p>]</p>
+                            <p>MyUnits2 : [ ... ]</p>
+                            <p>...</p>
+                        </div>
+                        <p>}</p>
+                    </div>
+                    <div class="imgContainer">
+                        <img src="img/posicionJSON.png">
+                    </div>
+                </div>
+            </div>
+            <h3 id="getOpLimit" translate="no">GET /limite-operativo</h3>
+            <div class="content">
+                <p>Devuelve el límite operativo, la limita de importe para el día<a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=31', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        Ver la documentación de OMIE
+                    </a>.</p>
+            </div>
+            <h3 id="getPotenciaLimit" translate="no">GET /limite-potencia</h3>
+            <div class="content">
+                <p>Devuelve los límites de potencia de las UPs del agente.</p>
+                <div class="vSplit">
+                    <div class="codeSnippet">
+                        <p>{</p>
+                        <div class="list">
+                            <p>MyUnits1 : [</p>
+                            <div class="list">
+                                <p>contractID : {</p>
+                                <div class="list">
+                                    <p>poMax: potencia max</p>
+                                    <p>poMin: potencia min</p>
+                                </div>
+                                <p>}</p>
+                                <p>contractID : {</p>
+                                <div class="list">
+                                    <p>poMax: potencia max</p>
+                                    <p>poMin: potencia min</p>
+                                </div>
+                                <p>}</p>
+                                <p>...</p>
+                            </div>
+                            <p>]</p>
+                            <p>MyUnits2 : [ ... ]</p>
+                            <p>...</p>
+                        </div>
+                        <p>}</p>
+                    </div>
+                    <div class="imgContainer">
+                        <img src="img/limitePotenciaJSON.png">
+                    </div>
+                </div>
+            </div>
+            <h3 id="getIDHora" translate="no">GET /id-hora</h3>
+            <div class="content">
+                <p>Devuelve un objeto que da la fecha y el cuarto de hora para cada contrato en el mercado.</p>
+            </div>
+            <h3 id="getBestPrices" translate="no">GET /best-prices</h3>
+            <div class="content">
+                <p>Devuelve el mejor precio de venta y de compra pada cada contrato.</p>
+            </div>
+            <h3 id="shutdown" translate="no">POST /shutdown</h3>
+            <div class="content">
+                <p>Apaga la connección con el servidor de OMIE.</p>
+            </div>
+            <h3 id="startUp" translate="no">POST /start-up</h3>
+            <div class="content">
+                <p>Inicia la connección con el servidor de OMIE.</p>
+            </div>
+            <h3 id="refresh">POST /refresh</h3>
+            <div class="content">
+                <p>
+                    Pide a la API de llamar al servidor para reiniciar sus datos.
+                </p>
+            </div>
+            <h3 id="postOrders" translate="no">POST /orders</h3>
+            <div class="content">
+                <p>Envío de ofertas para el mercado. El body de esta petición es un JSON de estructra
+                    NewOrder (ver la <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=42', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        Documentacion de OMIE</a>).
+                    Las ofertas se guardan para cada usuario, asi los usuarios pueden acceder a sus ofertas y tratarlas
+                    independientemente de otras ofertas.
+                </p>
+                <p>La respuesta devuelve 3 cosas: un basketID que permite autenticar y seguir el estado de las ofertas,
+                    una lista de todas las ofertas válidas que se han enviado en XBID y una lista de las ofertas que no
+                    se
+                    han enviado con la razón del rechazo de envío.</p>
+                <div class="vSplit">
+                    <div>
+                        <p>respuesta :</p>
+                        <div class="codeSnippet">
+                            <p>{</p>
+                            <div class="list">
+                                <p>basketID : (string)</p>
+                                <p>valid : [OrderEntry]</p>
+                                <p>invalid : [OrderEntry]</p>
+                            </div>
+                            <p>}</p>
+                        </div>
+                        <p>ISMSLClientOrderError :</p>
+                        <div class="codeSnippet">
+                            <p>{</p>
+                            <div class="list">
+                                <p>error : (string)</p>
+                                <p>desc : (String)</p>
+                                <p>limitValue : (String)</p>
+                            </div>
+                            <p>}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <p>OrderEntry :</p>
+                        <div class="codeSnippet">
+                            <p>{</p>
+                            <div class="list">
+                                <p>agentID : (string)</p>
+                                <p>message : (String)</p>
+                                <p>zone : (String)</p>
+                                <p>unit : (String)</p>
+                                <p>contractID : (number)</p>
+                                <p>type : (String)</p>
+                                <p>executionCondition : (String)</p>
+                                <p>validity : (String)</p>
+                                <p>clientOrderID : (String)</p>
+                                <p>prc : (number)</p>
+                                <p>qty : (number)</p>
+                                <p>tQty : (number)</p>
+                                <p>ppd : (number)</p>
+                                <p>err : (ISMSLClientOrderError)</p>
+                            </div>
+                            <p>}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="content">
+                    <p>ISMSLClientOrderError :</p>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>error</th>
+                                <th>desc</th>
+                                <th>limitValue</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>COMPLEX_COND</td>
+                                <td>"Complex condition is Linked but order isn't FOK"</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>CONTRACT_C</td>
+                                <td>Contract for this order is currently closed</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>ILLEGAL_VALIDTY</td>
+                                <td>Order wouldn't be valid at GtD date and time, validity time must be a multiple of 5
+                                    minutes</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>LIMIT_OP</td>
+                                <td>Operative limit is too low to add this order</td>
+                                <td>limite Operativo</td>
+                            </tr>
+                            <tr>
+                                <td>MAX_PRC</td>
+                                <td>prc is over maximum price</td>
+                                <td>precio maximo</td>
+                            </tr>
+                            <tr>
+                                <td>MAX_QTY</td>
+                                <td>qty is over maximum quantity</td>
+                                <td>quantidad maxima</td>
+                            </tr>
+                            <tr>
+                                <td>MAX_TQTY</td>
+                                <td>tqty is over maximum quantity</td>
+                                <td>quantidad total maxima</td>
+                            </tr>
+                            <tr>
+                                <td>MIN_PRC</td>
+                                <td>prc is below minimum price</td>
+                                <td>precio minimo</td>
+                            </tr>
+                            <tr>
+                                <td>MIN_QTY</td>
+                                <td>qty is below minimum quantity</td>
+                                <td>quantidad minima</td>
+                            </tr>
+                            <tr>
+                                <td>MIN_STEP</td>
+                                <td>step is below minimum step (qty in iceberg)</td>
+                                <td>paso minimo</td>
+                            </tr>
+                            <tr>
+                                <td>MIN_TQTY</td>
+                                <td>tqty is below minimum quantity</td>
+                                <td>quantidad total minima</td>
+                            </tr>
+                            <tr>
+                                <td>OFF_LIMITS</td>
+                                <td>Posicion after this order would be out of up limits</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>ORDER_IACT</td>
+                                <td>Order version in cancel querry doesn't match version of order</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>PPD_SIGN</td>
+                                <td>ppd sign doesn't match order type</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>TQTYlteQTY</td>
+                                <td>tqty is below qty</td>
+                                <td>null</td>
+                            </tr>
+                            <tr>
+                                <td>VERSION_UNMATCHED</td>
+                                <td>Order version in cancel querry doesn't match version of order</td>
+                                <td>actual version del order</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <h3 id="postCancel" translate="no">POST /orders/cancel</h3>
+            <div class="content">
+                <p>Envío de ofertas para cancelar. El body debe ser construido como descrito en <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=44', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        CancelOrder </a>.</p>
+                <p>La respuesta contiene dos listas, valid que contiene las cancelaciones que se han enviado e invalid
+                    los
+                    que no se pudieron enviar similar a la respuesta de <a href="#postOrders" translate="no">POST
+                        /orders</a>.</p>
+
+            </div>
+            <h3 id="postCancelContract" translate="no">POST /orders/cancel-contract</h3>
+            <div class="content">
+                <p>Cancela todas las ofertas en el contrato espeficado en el body. El body debe ser un listado simple de
+                    los contractID de los contratos.</p>
+                <p>La respuesta contiene dos listas, valid que contiene las cancelaciones que se han enviado e invalid
+                    los
+                    que no se pudieron enviar similar a la respuesta de <a href="#postOrders" translate="no">POST
+                        /orders</a>.</p>
+
+            </div>
+            <h3 id="postCancelAll" translate="no">POST /orders/cancel-all</h3>
+            <div class="content">
+                <p>Cancela todas las ofertas activas en XBID, no body es necesario. La respuesta está la misma que la de
+                    <a href="#postCancel" translate="no">POST /orders/cancel</a>
+                </p>
+            </div>
+            <h3 id="postCancelAllClient" translate="no">POST /orders/cancel-all/{clientID}</h3>
+            <div class="content">
+                <p>Cancela todas las ofertas del cliente de ID clientID activas en XBID, no body es necesario. La
+                    respuesta está la misma que la de
+                    <a href="#postCancel" translate="no">POST /orders/cancel</a>
+                </p>
+            </div>
+            <h3 id="postModify" translate="no">POST /orders/modify</h3>
+            <div class="content">
+                <p>Envío de un array de ofertas para modificar. El array no tiene restricciones de tamaño y debe
+                    contener querries de modificación como descrito en la <a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=45', 'OMIEDoc', 'width=800,height=600'); return false;">
+                        documentacion OMIE </a>.</p>
+                <p>La respuesta es la misma que la del envío de <a href="#postOrders">nuevas ofertas</a>, sin el ID de
+                    basket.</p>
+            </div>
+            <h3 id="postActivateAll" translate="no">POST /orders/activate-all</h3>
+            <div class="content">
+                <p>Envío sin body, coge todas las ofertas hibernadas y las activa. Devuelve todas las ofertas activadas
+                    así.</p>
+            </div>
+            <h3 id="getBasket" translate="no">GET /orders/{basketID}</h3>
+            <div class="content">
+                <p>Devuelve todas las informaciones de un basket de ofertas. La llamada se hace sin body. La respuesta
+                    contiene 3 array: </p>
+                <div class="list">
+                    <p>- pending que contiene las ofertas que la API todavía no ha comunicado al servidor, u órdenes
+                        para cuales el servidor no ha comunicado su agregación.</p>
+                    <p>- done que contiene la última versión, que ha comunicado el servidor a la API, de las
+                        ofertas del basket. Se encuentran también las ofertas si han sido canceladas, casadas o
+                        hibernadas.
+                    </p>
+                    <p>- err que contiene los mensajes de errores que el servidor ha comunicado a la API a propósito del
+                        basket.</p>
+                </div>
+                <p>La consulta de un basket sigue disponible mientras el basket contiene ofertas en un contrato activo.
+                </p>
+            </div>
+            <h3 id="getBasketsClient" translate="no">GET /user/{clientID}</h3>
+            <div class="content">
+                <p>Devuelve todos los ID de los baskets enviado por un cliente de ID clientID.</p>
+            </div>
+            <h3 id="postCancelBasket" translate="no">POST /orders/{basketID}/cancel</h3>
+            <div class="content">
+                <p>Funciona igual que <a href="#postCancelAll" translate="no">POST /orders/cancel-all</a>, Cancela todas
+                    las ofertas
+                    del basket espeficado.</p>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
