@@ -44,7 +44,7 @@
                     la documentación de OMIE </a>.
             </p>
             <div class="imgContainer">
-                <div class="imgScrollContainer"><img class="bigPicture" src="svg/globalStructure.svg"></div>
+                <div class="imgScrollContainer"><img class="bigPicture" src="svg/globalStructure_cleaned.svg"></div>
             </div>
         </div>
         <h2 id="estrucutra">
@@ -240,9 +240,13 @@
                         href="./javaDoc/com/nano/api/ClientBasketStatus.html">ClientBasketStatus</a>.
                 </p>
                 <p>
-                    ErrorResponse usualmente llega en la cola cuando se envian ofertas mal construidas al servidor, significando en la mayoría de los casos que los datos de la API estan 
-                    desincronizado con el servidor. Algunos mensajes de errores vienen con la valor a cambiar (por ejemplo, en caso de enviar una oferta con demasiado importe para el limite operativo, llega en la cola el error 519
-                    y la valor del limite operativo, asi se puede arreglar los datos) en los otros casos, la API envia Inquiries para volver a sincronizarse
+                    ErrorResponse usualmente llega en la cola cuando se envian ofertas mal construidas al servidor,
+                    significando en la mayoría de los casos que los datos de la API estan
+                    desincronizado con el servidor. Algunos mensajes de errores vienen con la valor a cambiar (por
+                    ejemplo, en caso de enviar una oferta con demasiado importe para el limite operativo, llega en la
+                    cola el error 519
+                    y la valor del limite operativo, asi se puede arreglar los datos) en los otros casos, la API envia
+                    Inquiries para volver a sincronizarse
                 </p>
             </div>
         </div>

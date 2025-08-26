@@ -4,6 +4,9 @@ body {
     color: lightgray;
 }
 
+html {
+  color-scheme: dark;
+}
 #doc {
     padding-left: 20vw;
     padding-right: 20vw;
@@ -101,6 +104,7 @@ th, td {
 .bigPicture {
     max-width: 120vw;
     width: 100%;
+    color: white;
 }
 
 .vSplit {
