@@ -29,6 +29,7 @@
             <p>- <a href="#introduccion">INTRODUCCIÓN</a></p>
             <p>- <a href="#estrucutra">ESTRUCTURA</a></p>
             <p>- <a href="#detalle">DETALLE DE FUNCIONAMIENTO</a></p>
+            <p>- <a href="#consejos">CONSEJOS</a></p>
             <p>- <a href="#logs">LOGS</a></p>
         </div>
         <h2 id="introduccion">
@@ -96,7 +97,8 @@
                         href="./javaDoc/com/nano/nanoController/RoutesFactory.html">RoutesFactory</a> para llenar routes
                     con todas las rutas.
                     Cuando llega una petición al servidor, mira en el listado de rutas si una corresponde al uri/método
-                    http y llama el <a href="./javaDoc/com/nano/service/NanoService.html"> servicio</a> con el método
+                    http y llama el <a href="./javaDoc/com/nano/service/NanoService.html" target="_blank"
+                        rel="noopener noreferrer"> servicio</a> con el método
                     guardado en la ruta si una corresponde.
                 </p>
             </div>
@@ -107,23 +109,49 @@
             <div class="content">
                 <div class="codeSnippet">
                     <p>
-                        public static void startXBIDSession() {<br><br>
+                        public static void startXBIDSession(MongoConnect mongoClient2) {<br><br>
                     <div class="content">
-                        String zone = "10YES-REE------0";<br>
-                        HostInfo hostData = HostConfig.test();<br>
-                        new Login(Certs.FG, hostData.getHostname(), "/jsiom/app/servicesTrading/login/",
-                        hostData.getAppId(), zone);<br>
-                        UIController controller = Login.controller;<br>
-                        gatewayTimeHandler = new GatewayTimeHandler(controller);<br>
-                        xbidInfo = new XbidInfo(gatewayTimeHandler, mongoClient, zone);<br>
-                        orderMngr = new OrderMngr(xbidInfo, gatewayTimeHandler);<br>
-                        XbidInfoAmqpUpdater.addXbidInfo(xbidInfo, orderMngr);<br>
+                        <p>
+                            mongoClient = mongoClient2;<br>
+                            connectProd(Certs.JJ);<br>
+                        </p>
+                    </div>
+                    }<br><br>
+                    private static void connectProd(Cert cert) {<br><br>
+                    <div class="content">
+                        <p>
+                            String zone = "10YES-REE------0";<br>
+                            AmqpConnectionMngr.setCerts(cert);<br>
+                            AmqpConnectionMngr.setHostData(HostConfig.production());<br>
+                            AmqpConnectionMngr.setRestLoginUri("/jsiom/app/servicesTrading/login/");<br>
+                            AmqpConnectionMngr.setZone(zone);<br>
+                            AmqpConnectionMngr.initiateConnection();<br>
+                            UIController controller = AmqpConnectionMngr.getController();<br>
+                            if (mongoClient == null ) mongoClient = new MongoConnect(MongoConnect.PROD);<br>
+                            mongoClient.setUploadWorkers();<br>
+                            gatewayTimeHandler = new GatewayTimeHandler(controller);<br>
+                            xbidInfo = new XbidInfo(gatewayTimeHandler, mongoClient, zone);<br>
+                            orderMngr = new OrderMngr(xbidInfo, gatewayTimeHandler);<br>
+                            XbidInfoAmqpUpdater.addXbidInfo(xbidInfo, orderMngr);
+                        </p>
                     </div>
                     }
                     </p>
                 </div>
                 <p>Este codigo inicializa la connección con el servidor XBID y las clases que gestionan los datos del
                     servidor.</p>
+
+                <div class="codeSnippet">
+                    <p>mongoClient = mongoClient2;</p>
+                </div>
+                <p>El mongoClient gestiona las comunicaciones con la base de datos. Esta inicializado por el controller
+                    de la API.</p>
+
+                <div class="codeSnippet">
+                    <p>connectProd(Certs.JJ);</p>
+                </div>
+                <p>Connecta la API al servidor de produción con el certificado especificado.</p>
+
                 <div class="codeSnippet">
                     <p>String zone = "10YES-REE------0";</p>
                 </div>
@@ -131,24 +159,39 @@
                         onclick="window.open('ressources/OMIEDoc.pdf#page=13', 'OMIEDoc', 'width=800,height=600'); return false;">
                         zona geográfica</a> del agente (españa, portugal etc).
                 </p>
+
                 <div class="codeSnippet">
-                    <p>HostInfo hostData = HostConfig.test();</p>
+                    <p>AmqpConnectionMngr.setCerts(cert);</p>
+                </div>
+                <p>
+                    Da el certificado a la clase AmqpConnectionMngr. Esta clase arranca la cola Amqp y los beans Spring.
+                    Ademas guarda los datos de conexión (usuario y contraseña Rabbit, certificado etc)
+                    que estan utilizado por el resto del proyecto.
+                </p>
+
+                <div class="codeSnippet">
+                    <p>AmqpConnectionMngr.setHostData(HostConfig.production());</p>
                 </div>
                 <p>HostConfig guarda perfiles de <a href="#"
                         onclick="window.open('ressources/OMIEDoc.pdf#page=9', 'OMIEDoc', 'width=800,height=600'); return false;">
                         appID </a> y url para conectarse a diferentes entornos (producción o test).
                 </p>
+
                 <div class="codeSnippet">
-                    <p>new Login(Certs.FG, hostData.getHostname(), "/jsiom/app/servicesTrading/login/",
-                        hostData.getAppId(), zone);</p>
+                    <p>AmqpConnectionMngr.setRestLoginUri("/jsiom/app/servicesTrading/login/");</p>
                 </div>
-                <p>Login inicia la conexión con el servidor y inicializa el contexto spring para interactuar con el
-                    servidor. El funcionamiento de Login no esta descrito por ser ya hecho al empezo de este proyecto.
+                <p>
+                    uri para pedir la connexión a una cola al servidor.
                 </p>
+
                 <div class="codeSnippet">
-                    <p>UIController controller = Login.controller</p>
+                    <p>
+                        AmqpConnectionMngr.initiateConnection();
+                    </p>
                 </div>
-                <p>Coge el controller del Login para el envío de peticiones.</p>
+                <p>Inicia la .</p>
+
+
                 <div class="codeSnippet">
                     <p>gatewayTimeHandler = new GatewayTimeHandler(controller);</p>
                 </div>
@@ -202,7 +245,8 @@
                 <p>
                     Con PublicContract se actualiza <a href="#"
                         onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
-                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html" target="_blank"
+                        rel="noopener noreferrer">XbidInfo</a>.
                     Se añaden a los datos las nuevas ofertas (o modificaciones de ofertas ya existando) y se actualiza
                     el estado de los contratos. Antes de modificar los datos, se verifican los números de versión. Si el
                     mensaje
@@ -213,7 +257,8 @@
                 <p>
                     Con TradeUpdate se actualiza <a href="#"
                         onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
-                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                        MarketInfo</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html" target="_blank"
+                        rel="noopener noreferrer">XbidInfo</a>.
                     Se añaden las nuevas transacciones. Se verifica la versión del mensaje igual que para los
                     PublicContract.
                     Además si una oferta implica el agente, se añade al <a href="#"
@@ -227,14 +272,16 @@
                 <p>
                     Con PrivateOrder se actualiza <a href="#"
                         onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">
-                        OrderList</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html">XbidInfo</a>.
+                        OrderList</a> en <a href="./javaDoc/ismsl/manager/XbidInfo.html" target="_blank"
+                        rel="noopener noreferrer">XbidInfo</a>.
                     Las ofertas se actualizan de la misma manera que para un mensaje PublicContract. Ademas se actualiza
                     el limite operativo (se añade el importe x IVA de la oferta si esta una nueva oferta o se quita la
                     diferencia de importe x IVA si esta una modificación) y se quita el orderID del <a
                         href="./javaDoc/ismsl/manager/orders/OrdersCache.html">OrdersCache</a> significando que los
                     datos del servidor estan en un estado que permite envio de ofertas.<br>
                     En el caso que el estado de la oferta esta PEXE o FEXE (parcialmente ejecutado o "fully" ejecutado)
-                    se añade los ID al <a href="./javaDoc/ismsl/manager/orders/OrdersCache.html">OrdersCache</a> porque
+                    se añade los ID al <a href="./javaDoc/ismsl/manager/orders/OrdersCache.html" target="_blank"
+                        rel="noopener noreferrer">OrdersCache</a> porque
                     hasta que llegue el mensaje de transacción, el limite operativo esta erroneado.
                     Finalmente se actualiza el <a
                         href="./javaDoc/com/nano/api/ClientBasketStatus.html">ClientBasketStatus</a>.
@@ -247,6 +294,155 @@
                     cola el error 519
                     y la valor del limite operativo, asi se puede arreglar los datos) en los otros casos, la API envia
                     Inquiries para volver a sincronizarse
+                </p>
+            </div>
+            <h3>Subasta de documentos a MongoDB</h3>
+            <div class="intro">
+                <p>Que datos y por que forma se suben en MongoDB.</p>
+            </div>
+            <div class="content">
+                <p>La API solo guarda las transacciones del mercado. La colección esta en
+                    TERA.Datos_De_Mercado.Transacciones_De_Contrato_Continuo. Los documentos son uno para cada contrato.
+                    Cada vez que un contrato pasa del estado "TRADING" a otro (<a href="#"
+                        onclick="window.open('ressources/OMIEDoc.pdf#page=20', 'OMIEDoc', 'width=800,height=600'); return false;">ver
+                        doc OMIE</a>),
+                    los datos de este contrato estan subido a Mongo.
+                </p>
+                <div class="codeSnippet">
+                    <p>
+                        {<br>
+                    <div class="list">
+                        "contractID": 544367,<br>
+                        "fecha": "2025-09-16",<br>
+                        "zone": "10YES-REE------0",<br>
+                        "tradingPhaseStart": "2025-09-15T15:20:00.000+02:00",<br>
+                        "tradingPhaseEnd": "2025-09-16T11:00:00.000+02:00",<br>
+                        "dateUpload": "2025-09-15T19:58:41.885Z",<br>
+                        "tradeList": [<br>
+                        <div class="list">
+                            {<br>
+                            <div class="list">
+                                "tradeID": 861420976,<br>
+                                "buyOrderID": 127734941,<br>
+                                "sellOrderID": 127724119,<br>
+                                "qty": 0.1,<br>
+                                "prc": 10.1,<br>
+                                "timestmp": "2025-09-15T16:13:35.270+02:00"<br>
+                            </div>
+                            },<br>
+                            {<br>
+                            <div class="list">
+                                "tradeID": 861751841,<br>
+                                "buyOrderID": 127800734,<br>
+                                "sellOrderID": 127797017,<br>
+                                "qty": 0.1,<br>
+                                "prc": 13.14,<br>
+                                "timestmp": "2025-09-15T21:39:14.934+02:00"<br>
+                            </div>
+                            }
+                        </div>
+                        ],<br>
+                        "hora": 13,<br>
+                        "quarter": 2<br>
+                    </div>
+                    }
+                    </p>
+                </div>
+                <p>
+                    En tradeList, se guardan todas las transacciones para el contrato. Para transacciones nuestras, se
+                    guarda
+                    el up de compra y/o de venta en los campos upCompra y upVenta de las transacciones.
+                </p>
+                <div class="codeSnippet">
+                    <p>
+                        {<br>
+                    <div class="list">
+                        "tradeID": 862027141,<br>
+                        "buyOrderID": 127906719,<br>
+                        "sellOrderID": 127899279,<br>
+                        "qty": 0.1,<br>
+                        "prc": 33.82,<br>
+                        "timestmp": "2025-09-16T04:19:32.490+02:00",<br>
+                        "upVenta": "ISMRE05"<br>
+                    </div>
+                    }
+                    </p>
+                </div>
+            </div>
+            <h3>Interfaz Cliente-API</h3>
+            <div class="intro">
+                <p>
+                    Como se tratan las peticiones de clientes.
+                </p>
+            </div>
+            <div class="content">
+                <p>
+                    Todas las peticiones llegan en el método serve de <a
+                        href="javaDoc/com/nano/nanoController/EmbeddedHttpServer.html" target="_blank"
+                        rel="noopener noreferrer">EmbeddedHttpServer</a>. La clase tiene una lista de <a
+                        href="javaDoc/com/nano/nanoController/NanoRoute.html" target="_blank"
+                        rel="noopener noreferrer">NanoRoute</a>, cada route vincula un endpoint y método http a un
+                    método de <a href="javaDoc/com/nano/service/NanoService.html" target="_blank"
+                        rel="noopener noreferrer">NanoService</a>.<br><br>
+                    Ejemplo de creación de ruta:
+                </p>
+                <div class="codeSnippet">
+                    <p>
+                        NanoRoute OrdersCancelAllUserNanoRoute = new NanoRoute("^/orders/cancel-all/([\\w-]+)$");<br>
+                        OrdersCancelAllUserNanoRoute.register(Method.POST, (s, m) ->
+                        service.cancelAllUserOrders(m.group(1)));<br>
+                        routes.add(OrdersCancelAllUserNanoRoute);<br>
+                    </p>
+                </div>
+                <p>
+                    Esta ruta vincula la llamada http POST a /orders/cancel-all/{client-id} al método
+                    cancelAllUserOrders({client-id}). Los métodos pueden tener hasta 2 parametros : s y m.
+                    s esta la peticion entera que contiene el headers y el body. m esta por si el endpoint tiene una
+                    variable o sea la ruta describe el endpoint con un regex (en este caso el {client-id}).
+                </p>
+                <p>
+                    Todas las rutas estan creadas con <a href="javaDoc/com/nano/nanoController/RoutesFactory.html"
+                        target="_blank" rel="noopener noreferrer">RoutesFactory</a>. Entonces para añadir una nueva
+                    ruta, solo hay que añadir otra ruta al RoutesFactory respectando a la estrucutra y crear el método
+                    correspondiente en <a href="javaDoc/com/nano/service/NanoService.html" target="_blank"
+                        rel="noopener noreferrer">NanoService</a>.
+                </p>
+            </div>
+        </div>
+        <h2 id="consejos">
+            CONSEJOS
+        </h2>
+        <div class="intro">
+            <p>Consejos de uso de la API o en caso de problemas.</p>
+        </div>
+        <div class="content">
+            <h3>La API esta creando problemas en XBID</h3>
+            <div class="content">
+                <div class="vSplit">
+                    <p>
+                        La API se vuelve caca y OMIE esta llamando Joaquin?
+                    </p>
+                    <div><img class="thumbnail" src="img/CRINGEjpg.jpg"></div>
+                </div>
+                <p>Usualmente, si OMIE esta llamando esta porque la cola no se esta consumiendo bastante rapidamente. De
+                    todas formas, hay que parar la connexión con XBID.
+                    Por esto esta el endpoint <a href="apiEndpoints.html">/shutdown</a>.
+                    Despues, para verificar que el problema esta en el consumo de la cola, esta recomendado descargar
+                    los logs al endpoint <a href="apiEndpoints">/logs</a>. En los logs, comprobar
+                    en dataUpdates0.log que los ultimos log se han imprimado poco tiempo antes de cerrar la connexion y
+                    que los mensajes estan tratado sin retraso. Es decir que el timestamp de los mensajes sea a la misma
+                    hora que la hora de
+                    imprimir el log (cuidar que el servidor AWS esta en tiempo UTC + 1 minuto y pico mientras Esapña
+                    esta en UTC+1 o UTC+2).
+                </p>
+                <p>
+                    Otra fuente de problema puede ser la cantidad de peticiones enviadas a XBID. Estas se pintan en el
+                    log querries. Comprobar que no se envian mas que unas 50 peticion por hora (nunca ha sido un
+                    problema pero omie recomanda no enviar demasiado mensajes al servidor).
+                </p>
+                <p>
+                    Tambien se puede buscar en el log Exceptions por una excpetion que podria indicar la fuente del
+                    problema.
                 </p>
             </div>
         </div>
