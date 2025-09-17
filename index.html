@@ -445,6 +445,18 @@
                     problema.
                 </p>
             </div>
+            <h3>Uso de MongoConnect</h3>
+            <div class="content">
+                <p>
+                    Esta importante cuidar que uploadToDb en <a href="javaDoc/ismsl/manager/MongoConnect.html"
+                        target="_blank" rel="noopener noreferrer">MongoConnect</a> sea puesto a false si la API no esta
+                    conectada en producción. Sino se subirán datos del entorno de test al mongoDB (y se mezclarán con
+                    datos de producción).
+                    Asi como, esta recomendado utilizar los métodos connectProd y connectTest para iniciar <a
+                        href="javaDoc/ismsl/manager/XBIDMngr.html" target="_blank"
+                        rel="noopener noreferrer">XBIDMngr</a>.
+                </p>
+            </div>
         </div>
         <h2 id="logs">
             LOGS
